@@ -1,0 +1,35 @@
+
+name: Daily story generator
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 17 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  generate-story:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Get repository files
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate story for today
+        run: |
+          python story_generator.py --episode "$(python -c 'from datetime import date; print(date.today().toordinal())')" --output output/episode.json
+
+      - name: Save generated story
+        uses: actions/upload-artifact@v4
+        with:
+          name: story-${{ github.run_id }}
+          path: output/episode.json
+          retention-days: 7
